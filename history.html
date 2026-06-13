@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AROGYA — Patient History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --green:  #00C896;
+      --yellow: #FFB347;
+      --red:    #FF4757;
+      --dark:   #0A0E1A;
+      --card:   #111827;
+      --border: #1F2937;
+      --text:   #E5E7EB;
+      --muted:  #6B7280;
+      --white:  #FFFFFF;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #0D1B2A;
+      border-bottom: 1px solid var(--border);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .logo span {
+      color: var(--white);
+      font-weight: 400;
+      font-size: 12px;
+      display: block;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .nav-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .nav-link:hover { color: var(--green); border-color: var(--border); }
+    .nav-link.active { color: var(--green); border-color: var(--green); background: rgba(0,200,150,0.05); }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      color: var(--muted);
+      margin-bottom: 40px;
+    }
+
+    /* SEARCH */
+    .search-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 30px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: var(--dark);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus { border-color: var(--green); }
+    .search-input::placeholder { color: var(--muted); }
+
+    .btn-search {
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-search:hover { background: #00E6AC; }
+
+    .btn-all {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-all:hover { border-color: var(--green); color: var(--green); }
+
+    /* ALL PATIENTS TABLE */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .patients-table {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #0D1B2A;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 14px 20px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    td {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    tr:hover td { background: rgba(255,255,255,0.02); cursor: pointer; }
+
+    .risk-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .risk-HIGH     { background: rgba(255,71,87,0.15);  color: var(--red); }
+    .risk-MODERATE { background: rgba(255,179,71,0.15); color: var(--yellow); }
+    .risk-LOW      { background: rgba(0,200,150,0.15);  color: var(--green); }
+
+    /* PATIENT DETAIL */
+    #patientDetail { display: none; }
+
+    .detail-header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .patient-name-big {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--white);
+    }
+
+    .patient-meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .btn-back:hover { border-color: var(--green); color: var(--green); }
+
+    /* PROGRESS CHART */
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .chart-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 20px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 250px;
+    }
+
+    /* VISITS TIMELINE */
+    .visits-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .visit-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 140px 80px 1fr auto;
+      align-items: center;
+      gap: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .visit-card:hover { border-color: var(--green); }
+
+    .visit-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .visit-score {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .score-high     { color: var(--red); }
+    .score-moderate { color: var(--yellow); }
+    .score-low      { color: var(--green); }
+
+    .visit-diseases {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .disease-tag {
+      background: rgba(255,71,87,0.1);
+      color: var(--red);
+      border: 1px solid rgba(255,71,87,0.2);
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+    }
+
+    .disease-tag.none {
+      background: rgba(0,200,150,0.1);
+      color: var(--green);
+      border-color: rgba(0,200,150,0.2);
+    }
+
+    .visit-vitals {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    /* TREND INDICATOR */
+    .trend {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .trend-up   { background: rgba(255,71,87,0.1);  color: var(--red);    }
+    .trend-down { background: rgba(0,200,150,0.1);  color: var(--green);  }
+    .trend-same { background: rgba(107,114,128,0.1); color: var(--muted); }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    /* LOADING */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+      header { padding: 16px 20px; }
+      .visit-card { grid-template-columns: 1fr 1fr; }
+      .visit-vitals { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    AROGYA
+    <span>Patient History</span>
+  </div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">New Diagnosis</a>
+    <a href="/history" class="nav-link active">History</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <h1 class="page-title">Patient Records</h1>
+  <p class="page-subtitle">Search patient history and track health progress over time</p>
+
+  <!-- SEARCH -->
+  <div class="search-card">
+    <div class="search-row">
+      <input type="text" class="search-input" id="searchInput"
+             placeholder="Search patient name... e.g. Ramu"
+             onkeydown="if(event.key==='Enter') searchPatient()">
+      <button class="btn-search" onclick="searchPatient()">Search</button>
+      <button class="btn-all" onclick="loadAllPatients()">All Patients</button>
+    </div>
+  </div>
+
+  <!-- ALL PATIENTS LIST -->
+  <div id="allPatientsSection">
+    <div class="section-title">All Patients</div>
+    <div id="allPatientsContent">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading patient records...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATIENT DETAIL -->
+  <div id="patientDetail">
+    <div class="detail-header">
+      <div>
+        <div class="patient-name-big" id="detailName">--</div>
+        <div class="patient-meta" id="detailMeta">--</div>
+      </div>
+      <button class="btn-back" onclick="backToAll()">← Back</button>
+    </div>
+
+    <!-- PROGRESS CHART -->
+    <div class="chart-card">
+      <div class="chart-title">AROGYA Score Progress</div>
+      <div class="chart-container">
+        <canvas id="progressChart"></canvas>
+      </div>
+    </div>
+
+    <!-- VISIT HISTORY -->
+    <div class="section-title">Visit History</div>
+    <div class="visits-list" id="visitsList"></div>
+  </div>
+
+</div>
+
+<script>
+  let progressChartInstance = null;
+
+  // Load all patients on page load
+  window.onload = () => loadAllPatients();
+
+  async function loadAllPatients() {
+    document.getElementById('allPatientsSection').style.display = 'block';
+    document.getElementById('patientDetail').style.display = 'none';
+    document.getElementById('allPatientsContent').innerHTML = `
+      <div class="loading"><div class="spinner"></div><p>Loading...</p></div>`;
+
+    try {
+      const res  = await fetch('/all_patients');
+      const data = await res.json();
+
+      if (!data.success || data.patients.length === 0) {
+        document.getElementById('allPatientsContent').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p>No patient records yet.</p>
+            <p style="margin-top:8px;font-size:13px;">
+              Diagnose a patient first to see records here.
+            </p>
+          </div>`;
+        return;
+      }
+
+      const rows = data.patients.map(p => `
+        <tr onclick="viewPatient('${p.name}')">
+          <td style="font-weight:500;color:var(--white)">${p.name}</td>
+          <td>${p.visits}</td>
+          <td>
+            <span style="font-family:'Syne',sans-serif;font-weight:700;
+              color:${p.last_score > 65 ? 'var(--red)' : p.last_score > 30 ? 'var(--yellow)' : 'var(--green)'}">
+              ${p.last_score}
+            </span>
+          </td>
+          <td><span class="risk-badge risk-${p.last_risk}">${p.last_risk}</span></td>
+          <td style="color:var(--muted);font-size:12px">${p.last_visit}</td>
+        </tr>`).join('');
+
+      document.getElementById('allPatientsContent').innerHTML = `
+        <div class="patients-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient Name</th>
+                <th>Total Visits</th>
+                <th>Last Score</th>
+                <th>Last Risk</th>
+                <th>Last Visit</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    } catch(e) {
+      document.getElementById('allPatientsContent').innerHTML = `
+        <div class="empty-state">
+          <p>Error loading records. Make sure Flask is running.</p>
+        </div>`;
+    }
+  }
+
+  async function searchPatient() {
+    const name = document.getElementById('searchInput').value.trim();
+    if (!name) { loadAllPatients(); return; }
+    viewPatient(name);
+  }
+
+  async function viewPatient(name) {
+    document.getElementById('allPatientsSection').style.display = 'none';
+    document.getElementById('patientDetail').style.display = 'block';
+    document.getElementById('visitsList').innerHTML = `
+      <div class="loading"><div class="spinner"></div><p>Loading...</p></div>`;
+
+    try {
+      const res  = await fetch(`/search_patient?name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+
+      if (!data.success || data.visits.length === 0) {
+        document.getElementById('visitsList').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <p>No records found for "${name}"</p>
+          </div>`;
+        document.getElementById('detailName').textContent = name;
+        document.getElementById('detailMeta').textContent = 'No visits found';
+        return;
+      }
+
+      const visits = data.visits;
+      document.getElementById('detailName').textContent = visits[0].name;
+      document.getElementById('detailMeta').textContent =
+        `${visits.length} visit${visits.length > 1 ? 's' : ''} | Age: ${visits[0].age}`;
+
+      // Draw progress chart
+      drawProgressChart(visits);
+
+      // Draw visit cards
+      document.getElementById('visitsList').innerHTML = visits.map((v, i) => {
+        const scoreClass = v.score > 65 ? 'score-high' : v.score > 30 ? 'score-moderate' : 'score-low';
+        const diseases   = v.detected.length > 0
+          ? v.detected.map(d => `<span class="disease-tag">${d}</span>`).join('')
+          : `<span class="disease-tag none">All Clear ✓</span>`;
+
+        // Trend vs previous visit
+        let trendHtml = '';
+        if (i > 0) {
+          const prev = visits[i-1].score;
+          const curr = v.score;
+          if (curr > prev + 5)
+            trendHtml = `<span class="trend trend-up">↑ Worsening</span>`;
+          else if (curr < prev - 5)
+            trendHtml = `<span class="trend trend-down">↓ Improving</span>`;
+          else
+            trendHtml = `<span class="trend trend-same">→ Stable</span>`;
+        }
+
+        return `
+          <div class="visit-card">
+            <div>
+              <div class="visit-date">${v.timestamp}</div>
+              ${trendHtml}
+            </div>
+            <div class="visit-score ${scoreClass}">${v.score}</div>
+            <div class="visit-diseases">${diseases}</div>
+            <div class="visit-vitals">
+              BP: ${v.systolic_bp} mmHg<br>
+              Pulse: ${v.pulse} bpm<br>
+              SpO2: ${v.spo2}%
+            </div>
+          </div>`;
+      }).join('');
+
+    } catch(e) {
+      document.getElementById('visitsList').innerHTML = `
+        <div class="empty-state"><p>Error loading patient data.</p></div>`;
+    }
+  }
+
+  function drawProgressChart(visits) {
+    const labels = visits.map((v, i) => `Visit ${i+1}\n${v.timestamp.split(' ')[0]}`);
+    const scores = visits.map(v => v.score);
+    const colors = scores.map(s =>
+      s > 65 ? 'rgba(255,71,87,0.8)' : s > 30 ? 'rgba(255,179,71,0.8)' : 'rgba(0,200,150,0.8)');
+
+    if (progressChartInstance) {
+      progressChartInstance.destroy();
+    }
+
+    const ctx = document.getElementById('progressChart').getContext('2d');
+    progressChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'AROGYA Score',
+          data: scores,
+          borderColor: '#00C896',
+          backgroundColor: 'rgba(0,200,150,0.1)',
+          borderWidth: 2.5,
+          pointBackgroundColor: colors,
+          pointBorderColor: colors,
+          pointRadius: 8,
+          pointHoverRadius: 10,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1F2937',
+            titleColor: '#E5E7EB',
+            bodyColor: '#6B7280',
+            borderColor: '#374151',
+            borderWidth: 1,
+            callbacks: {
+              label: ctx => {
+                const s = ctx.raw;
+                const risk = s > 65 ? 'HIGH RISK' : s > 30 ? 'MODERATE' : 'LOW RISK';
+                return `Score: ${s}/100 — ${risk}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#6B7280' },
+            title: { display: true, text: 'AROGYA Score', color: '#6B7280' }
+          },
+          x: {
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#6B7280', maxRotation: 0 }
+          }
+        },
+        // Reference lines
+        annotation: {
+          annotations: {
+            highRisk: {
+              type: 'line',
+              yMin: 65, yMax: 65,
+              borderColor: 'rgba(255,71,87,0.4)',
+              borderWidth: 1,
+              borderDash: [5,5]
+            },
+            moderate: {
+              type: 'line',
+              yMin: 30, yMax: 30,
+              borderColor: 'rgba(255,179,71,0.4)',
+              borderWidth: 1,
+              borderDash: [5,5]
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function backToAll() {
+    document.getElementById('patientDetail').style.display = 'none';
+    document.getElementById('allPatientsSection').style.display = 'block';
+    document.getElementById('searchInput').value = '';
+  }
+</script>
+</body>
+</html>

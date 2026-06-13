@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AROGYA — AI Health Diagnostics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green:   #00C896;
+      --yellow:  #FFB347;
+      --red:     #FF4757;
+      --dark:    #0A0E1A;
+      --card:    #111827;
+      --border:  #1F2937;
+      --text:    #E5E7EB;
+      --muted:   #6B7280;
+      --white:   #FFFFFF;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, #0A0E1A 0%, #0D1B2A 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--green);
+      letter-spacing: -1px;
+    }
+
+    .logo span {
+      color: var(--white);
+      font-weight: 400;
+      font-size: 13px;
+      display: block;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: -4px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,200,150,0.1);
+      border: 1px solid rgba(0,200,150,0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--green);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* MAIN LAYOUT */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 50px;
+      animation: fadeUp 0.6s ease;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 em {
+      color: var(--green);
+      font-style: normal;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .tags {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    /* FORM CARD */
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    @media (max-width: 600px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      header { padding: 16px 20px; }
+      .form-card { padding: 24px; }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .field input, .field select {
+      background: #0A0E1A;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      transition: border-color 0.2s;
+      outline: none;
+      width: 100%;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--green);
+    }
+
+    .field input::placeholder { color: var(--muted); }
+
+    .field select option { background: #111827; }
+
+    /* SYMPTOMS GRID */
+    .symptoms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .symptom-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #0A0E1A;
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .symptom-check:hover { border-color: var(--green); }
+
+    .symptom-check input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--green);
+      cursor: pointer;
+    }
+
+    .symptom-check span {
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .symptom-check.checked {
+      border-color: var(--green);
+      background: rgba(0,200,150,0.05);
+    }
+
+    /* DIVIDER */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 30px 0;
+    }
+
+    /* SUBMIT BUTTON */
+    .btn-diagnose {
+      width: 100%;
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+      margin-top: 10px;
+    }
+
+    .btn-diagnose:hover {
+      background: #00E6AC;
+      transform: translateY(-1px);
+    }
+
+    .btn-diagnose:active { transform: translateY(0); }
+
+    .btn-diagnose:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* LOADING */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* RESULTS */
+    #results { display: none; margin-top: 40px; animation: fadeUp 0.5s ease; }
+
+    .score-card {
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-card.low      { background: linear-gradient(135deg, #00C89615, #00C89605); border: 1px solid #00C89640; }
+    .score-card.moderate { background: linear-gradient(135deg, #FFB34715, #FFB34705); border: 1px solid #FFB34740; }
+    .score-card.high     { background: linear-gradient(135deg, #FF475715, #FF475705); border: 1px solid #FF475740; }
+
+    .score-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 80px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .score-card.low .score-number      { color: var(--green); }
+    .score-card.moderate .score-number { color: var(--yellow); }
+    .score-card.high .score-number     { color: var(--red); }
+
+    .score-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .score-action {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .bmi-pill {
+      display: inline-block;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      margin-top: 16px;
+      color: var(--muted);
+    }
+
+    /* DISEASE BARS */
+    .diseases-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    @media (max-width: 600px) { .diseases-grid { grid-template-columns: 1fr; } }
+
+    .disease-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .disease-bar.detected {
+      border-color: rgba(255,71,87,0.4);
+      background: rgba(255,71,87,0.04);
+    }
+
+    .disease-bar.detected-moderate {
+      border-color: rgba(255,179,71,0.4);
+      background: rgba(255,179,71,0.04);
+    }
+
+    .disease-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .disease-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .disease-pct {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s ease;
+    }
+
+    /* RECOMMENDATIONS */
+    .rec-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .rec-disease-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rec-badge {
+      background: rgba(255,71,87,0.15);
+      color: var(--red);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+    }
+
+    .rec-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 700px) { .rec-grid { grid-template-columns: 1fr; } }
+
+    .rec-section h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .rec-item {
+      font-size: 13px;
+      color: var(--text);
+      padding: 4px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      line-height: 1.4;
+    }
+
+    .rec-item .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .dot-green  { background: var(--green); }
+    .dot-red    { background: var(--red); }
+    .dot-yellow { background: var(--yellow); }
+
+    /* EMERGENCY */
+    .emergency-card {
+      background: rgba(255,71,87,0.05);
+      border: 1px solid rgba(255,71,87,0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 20px;
+    }
+
+    .emergency-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--red);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    .emergency-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .emergency-item {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .emergency-item strong {
+      display: block;
+      color: var(--white);
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .emergency-item span { color: var(--muted); }
+
+    /* HEALTHY */
+    .healthy-card {
+      background: rgba(0,200,150,0.05);
+      border: 1px solid rgba(0,200,150,0.2);
+      border-radius: 16px;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .healthy-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      color: var(--green);
+      margin-bottom: 10px;
+    }
+
+    .healthy-tips {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .healthy-tip {
+      background: rgba(0,200,150,0.1);
+      border: 1px solid rgba(0,200,150,0.2);
+      color: var(--green);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    /* RESET BUTTON */
+    .btn-reset {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 14px;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 20px;
+    }
+
+    .btn-reset:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* KANNADA TOGGLE */
+    .lang-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--muted);
+      transition: all 0.2s;
+    }
+
+    .lang-toggle:hover { border-color: var(--green); color: var(--green); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    AROGYA
+    <span>Edge AI Health Diagnostics</span>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;">
+    <a href="/history" style="color:var(--muted);text-decoration:none;font-size:14px;
+       padding:8px 16px;border-radius:8px;border:1px solid var(--border);
+       transition:all 0.2s;" onmouseover="this.style.color='#00C896';this.style.borderColor='#00C896'"
+       onmouseout="this.style.color='#6B7280';this.style.borderColor='#1F2937'">
+      Patient History
+    </a>
+    <a href="/analytics" style="color:var(--muted);text-decoration:none;font-size:14px;
+       padding:8px 16px;border-radius:8px;border:1px solid var(--border);
+       transition:all 0.2s;" onmouseover="this.style.color='#00C896';this.style.borderColor='#00C896'"
+       onmouseout="this.style.color='#6B7280';this.style.borderColor='#1F2937'">
+      Analytics
+    </a>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      9 AI Models Active
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Diagnose <em>9 Diseases</em><br>with AI — Free</h1>
+    <p>Built for rural Karnataka. Works offline. English + Kannada. Powered by machine learning trained on real patient data.</p>
+    <div class="tags">
+      <span class="tag">Diabetes</span>
+      <span class="tag">Anemia</span>
+      <span class="tag">Heart Disease</span>
+      <span class="tag">Hypertension</span>
+      <span class="tag">TB</span>
+      <span class="tag">Kidney</span>
+      <span class="tag">Dengue</span>
+      <span class="tag">Malnutrition</span>
+      <span class="tag">Pregnancy Risk</span>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-card" id="formSection">
+
+    <!-- BASIC INFO -->
+    <div class="section-title">Patient Information</div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Patient Name</label>
+      <input type="text" id="patient_name" placeholder="e.g. Ramu / ರಾಮು">
+    </div>
+    <div class="grid-3" style="margin-bottom:16px;">
+      <div class="field">
+        <label>Age (years)</label>
+        <input type="number" id="age" placeholder="e.g. 45" min="1" max="120">
+      </div>
+      <div class="field">
+        <label>Gender</label>
+        <select id="gender">
+          <option value="">Select</option>
+          <option value="1">Male / ಗಂಡು</option>
+          <option value="0">Female / ಹೆಣ್ಣು</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Weight (kg)</label>
+        <input type="number" id="weight" placeholder="e.g. 65" min="10" max="200">
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="field">
+        <label>Height (cm)</label>
+        <input type="number" id="height" placeholder="e.g. 165" min="50" max="250">
+      </div>
+      <div class="field">
+        <label>Systolic BP (mmHg)</label>
+        <input type="number" id="systolic_bp" placeholder="e.g. 120" min="60" max="250">
+      </div>
+      <div class="field">
+        <label>Diastolic BP (mmHg)</label>
+        <input type="number" id="diastolic_bp" placeholder="e.g. 80" min="40" max="150">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- VITALS -->
+    <div class="section-title">Vitals</div>
+    <div class="grid-3">
+      <div class="field">
+        <label>Pulse (bpm)</label>
+        <input type="number" id="pulse" placeholder="e.g. 72" min="30" max="250">
+      </div>
+      <div class="field">
+        <label>SpO2 (%)</label>
+        <input type="number" id="spo2" placeholder="e.g. 98" min="70" max="100">
+      </div>
+      <div class="field">
+        <label>Temperature (°F)</label>
+        <input type="number" id="temperature" placeholder="e.g. 98.6" step="0.1" min="90" max="108">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- SYMPTOMS -->
+    <div class="section-title">Symptoms / ರೋಗಲಕ್ಷಣಗಳು</div>
+    <div class="symptoms-grid">
+      <label class="symptom-check" id="lbl_headache">
+        <input type="checkbox" id="headache">
+        <span>Headache / ತಲೆನೋವು</span>
+      </label>
+      <label class="symptom-check" id="lbl_body_ache">
+        <input type="checkbox" id="body_ache">
+        <span>Body Ache / ಮೈ ನೋವು</span>
+      </label>
+      <label class="symptom-check" id="lbl_rash">
+        <input type="checkbox" id="rash">
+        <span>Skin Rash / ಚರ್ಮ ಕಾರ</span>
+      </label>
+      <label class="symptom-check" id="lbl_night_sweats">
+        <input type="checkbox" id="night_sweats">
+        <span>Night Sweats / ರಾತ್ರಿ ಬೆವರು</span>
+      </label>
+      <label class="symptom-check" id="lbl_weight_loss">
+        <input type="checkbox" id="weight_loss">
+        <span>Weight Loss / ತೂಕ ಇಳಿಕೆ</span>
+      </label>
+      <label class="symptom-check" id="lbl_fatigue">
+        <input type="checkbox" id="fatigue">
+        <span>Fatigue / ಆಯಾಸ</span>
+      </label>
+      <label class="symptom-check" id="lbl_chest_pain">
+        <input type="checkbox" id="chest_pain">
+        <span>Chest Pain / ಎದೆ ನೋವು</span>
+      </label>
+      <label class="symptom-check" id="lbl_breathless">
+        <input type="checkbox" id="breathless">
+        <span>Breathless / ಉಸಿರಾಟ ತೊಂದರೆ</span>
+      </label>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div class="field" style="max-width:200px;">
+        <label>Cough Duration (weeks)</label>
+        <input type="number" id="cough_weeks" placeholder="0" min="0" max="52" value="0">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- MEDICAL HISTORY -->
+    <div class="section-title">Medical History</div>
+    <div class="symptoms-grid">
+      <label class="symptom-check">
+        <input type="checkbox" id="diabetes_history">
+        <span>Diabetes History</span>
+      </label>
+      <label class="symptom-check">
+        <input type="checkbox" id="hypertension_history">
+        <span>BP History</span>
+      </label>
+      <label class="symptom-check">
+        <input type="checkbox" id="smoking">
+        <span>Smoking / ಧೂಮಪಾನ</span>
+      </label>
+      <label class="symptom-check">
+        <input type="checkbox" id="family_heart">
+        <span>Family Heart Disease</span>
+      </label>
+    </div>
+
+    <hr class="divider">
+
+    <button class="btn-diagnose" onclick="runDiagnosis()">
+      Run AI Diagnosis / ರೋಗನಿರ್ಣಯ ಮಾಡಿ
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Running 9 AI models...</p>
+    <p style="font-size:12px;margin-top:6px;color:#374151;">Analyzing patient data</p>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <!-- SCORE CARD -->
+    <div class="score-card" id="scoreCard">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;" id="patientNameDisplay"></div>
+      <div class="score-number" id="scoreNumber">--</div>
+      <div class="score-label" id="scoreLabel">--</div>
+      <div class="score-action" id="scoreAction">--</div>
+      <div class="bmi-pill" id="bmiPill">--</div>
+    </div>
+
+    <!-- DISEASE BARS -->
+    <div class="section-title" style="margin-bottom:16px;">Disease Risk Analysis</div>
+    <div class="diseases-grid" id="diseaseBars"></div>
+
+    <!-- RECOMMENDATIONS -->
+    <div id="recommendations"></div>
+
+    <!-- EMERGENCY -->
+    <div class="emergency-card">
+      <div class="emergency-title">Emergency Contacts (Free)</div>
+      <div class="emergency-grid">
+        <div class="emergency-item">
+          <strong>108</strong>
+          <span>Ambulance</span>
+        </div>
+        <div class="emergency-item">
+          <strong>104</strong>
+          <span>Health Helpline</span>
+        </div>
+        <div class="emergency-item">
+          <strong>14555</strong>
+          <span>Ayushman Bharat</span>
+        </div>
+        <div class="emergency-item">
+          <strong>1800-11-6666</strong>
+          <span>TB (Free)</span>
+        </div>
+        <div class="emergency-item">
+          <strong>1098</strong>
+          <span>Child Helpline</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-reset" onclick="resetForm()">
+      New Patient / ಹೊಸ ರೋಗಿ
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // Symptom checkbox style
+  document.querySelectorAll('.symptom-check input').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('.symptom-check').classList.toggle('checked', cb.checked);
+    });
+  });
+
+  const RECOMMENDATIONS = {
+    Diabetes: {
+      eat: ['Ragi (ರಾಗಿ) — low glycemic','Bitter gourd/Hagalakai','Drumstick/Nuggekai'],
+      avoid: ['White rice excess','Sugar and jaggery','Fried snacks'],
+      exercise: ['Walk 30 mins after each meal','Farm work counts!'],
+      govt: 'NPCDCS — FREE Metformin at PHC | Call 104'
+    },
+    Anemia: {
+      eat: ['Drumstick leaves — highest iron','Horse gram/Huruli','Dates + Sesame/Ellu'],
+      avoid: ['Tea/Coffee with meals — blocks iron'],
+      exercise: ['Light walk 15-20 mins only','Rest is important!'],
+      govt: 'Anaemia Mukt Bharat — FREE iron tablets at Anganwadi | ASHA worker'
+    },
+    Heart: {
+      eat: ['Garlic/Bellulli — 2 raw cloves daily','Amla/Nellikai','Flaxseed/Agasi'],
+      avoid: ['Salt < 5g/day','Fried food completely','Smoking completely'],
+      exercise: ['Slow walk 20-30 mins','STOP if chest pain!'],
+      govt: 'Ayushman Bharat — FREE up to ₹5 lakh | CHEST PAIN = CALL 108!'
+    },
+    Hypertension: {
+      eat: ['Banana — potassium lowers BP','Coconut water','Garlic daily'],
+      avoid: ['Salt — MOST IMPORTANT! < 5g/day','Pickles — very high salt'],
+      exercise: ['Walk 30-45 mins morning','Deep breathing 10 mins'],
+      govt: 'NPCDCS — FREE Amlodipine at PHC | Free BP check every Monday'
+    },
+    TB: {
+      eat: ['High protein — dal, eggs, milk','Ragi for strength','Drumstick soup'],
+      avoid: ['Alcohol completely','Smoking completely','Never skip DOTS medicine'],
+      exercise: ['COMPLETE REST!','Morning sunlight 20-30 mins'],
+      govt: 'DOTS Program — 100% FREE treatment | 1800-11-6666 FREE'
+    },
+    Kidney: {
+      eat: ['White rice — lower potassium','Cabbage/Kosu','Apple'],
+      avoid: ['Bananas, oranges — high potassium','Salt completely','Painkillers'],
+      exercise: ['Light walk 20-30 mins','Drink water before exercise'],
+      govt: 'PMJAY — FREE dialysis at District Hospital | Enroll Ayushman Bharat!'
+    },
+    Pregnancy: {
+      eat: ['Green leafy veg — folic acid','Ragi — calcium + iron','Dal and milk'],
+      avoid: ['Raw papaya — dangerous!','Alcohol completely'],
+      exercise: ['Walk 20-30 mins morning + evening','Rest after lunch'],
+      govt: 'JSY Scheme — FREE delivery + ₹1400 cash | Register at PHC!'
+    },
+    Dengue: {
+      eat: ['Papaya leaf juice — increases platelets!','Coconut water','Pomegranate juice'],
+      avoid: ['Spicy food','Fried food','Alcohol'],
+      exercise: ['COMPLETE REST!','Stay indoors'],
+      govt: 'NVBDCP — FREE dengue test + treatment | 108 if severe bleeding!'
+    },
+    Malnutrition: {
+      eat: ['Ragi porridge — best value','Groundnut chutney — cheapest protein','Sweet potato'],
+      avoid: ['Skipping meals','Junk food'],
+      exercise: ['Light activities only','Children — play is exercise!'],
+      govt: 'POSHAN Abhiyan — FREE food at Anganwadi | FREE for children under 5!'
+    }
+  };
+
+  function getBarColor(pct) {
+    if (pct > 65) return '#FF4757';
+    if (pct > 40) return '#FFB347';
+    return '#00C896';
+  }
+
+  async function runDiagnosis() {
+    const data = {
+      patient_name: document.getElementById('patient_name').value || 'Patient',
+      age:          parseInt(document.getElementById('age').value),
+      gender:       parseInt(document.getElementById('gender').value),
+      weight:       parseFloat(document.getElementById('weight').value),
+      height:       parseFloat(document.getElementById('height').value),
+      systolic_bp:  parseInt(document.getElementById('systolic_bp').value),
+      diastolic_bp: parseInt(document.getElementById('diastolic_bp').value) || 80,
+      pulse:        parseInt(document.getElementById('pulse').value),
+      spo2:         parseInt(document.getElementById('spo2').value),
+      temperature:  parseFloat(document.getElementById('temperature').value),
+      cough_weeks:  parseInt(document.getElementById('cough_weeks').value) || 0,
+      headache:     document.getElementById('headache').checked,
+      body_ache:    document.getElementById('body_ache').checked,
+      rash:         document.getElementById('rash').checked,
+      night_sweats: document.getElementById('night_sweats').checked,
+      weight_loss:  document.getElementById('weight_loss').checked,
+      fatigue:      document.getElementById('fatigue').checked,
+      chest_pain:   document.getElementById('chest_pain').checked,
+      breathless:   document.getElementById('breathless').checked,
+      diabetes_history:     document.getElementById('diabetes_history').checked ? 1 : 0,
+      hypertension_history: document.getElementById('hypertension_history').checked ? 1 : 0,
+      smoking:      document.getElementById('smoking').checked ? 1 : 0,
+      family_heart: document.getElementById('family_heart').checked ? 1 : 0,
+    };
+
+    // Validate
+    if (!data.age || !data.weight || !data.height || !data.pulse || !data.spo2 || !data.temperature) {
+      alert('Please fill all required fields!');
+      return;
+    }
+
+    // Show loading
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+
+    try {
+      const res = await fetch('/diagnose', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(data)
+      });
+      const json = await res.json();
+
+      document.getElementById('loading').style.display = 'none';
+
+      if (json.success) {
+        renderResults(json.result);
+        document.getElementById('results').style.display = 'block';
+      } else {
+        alert('Error: ' + json.error);
+        resetForm();
+      }
+    } catch (e) {
+      document.getElementById('loading').style.display = 'none';
+      alert('Server error. Make sure Flask is running!');
+      resetForm();
+    }
+  }
+
+  function renderResults(r) {
+    const score = r.score;
+    const risk  = r.risk;
+
+    // Score card
+    const card   = document.getElementById('scoreCard');
+    const riskClass = risk === 'HIGH' ? 'high' : risk === 'MODERATE' ? 'moderate' : 'low';
+    card.className = `score-card ${riskClass}`;
+    document.getElementById('scoreNumber').textContent = score;
+    document.getElementById('patientNameDisplay').textContent =
+      `Patient: ${r.patient_name || 'Unknown'}`;
+
+    if (risk === 'HIGH') {
+      document.getElementById('scoreLabel').textContent  = 'HIGH RISK — Doctor TODAY!';
+      document.getElementById('scoreAction').textContent = 'Please visit PHC or District Hospital immediately';
+    } else if (risk === 'MODERATE') {
+      document.getElementById('scoreLabel').textContent  = 'MODERATE RISK — Visit PHC Soon';
+      document.getElementById('scoreAction').textContent = 'Call 104 for free health advice';
+    } else {
+      document.getElementById('scoreLabel').textContent  = 'LOW RISK — You are Healthy!';
+      document.getElementById('scoreAction').textContent = 'Keep up healthy habits. Next checkup in 3 months.';
+    }
+
+    document.getElementById('bmiPill').textContent =
+      `BMI: ${r.bmi} (${r.bmi_cat}) | Hb est: ${r.hemo_est} g/dL`;
+
+    // Disease bars
+    const barsHtml = Object.entries(r.results).map(([disease, pct]) => {
+      if (pct < 0) return '';
+      const color    = getBarColor(pct);
+      const detected = pct > 50;
+      const cls      = pct > 65 ? 'disease-bar detected' : pct > 40 ? 'disease-bar detected-moderate' : 'disease-bar';
+      return `
+        <div class="${cls}">
+          <div class="disease-header">
+            <span class="disease-name">${disease}</span>
+            <span class="disease-pct" style="color:${color}">${pct}%</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${pct}%;background:${color};"></div>
+          </div>
+          ${detected ? `<div style="font-size:11px;color:${color};margin-top:6px;">⚠ Detected</div>` : ''}
+        </div>`;
+    }).join('');
+    document.getElementById('diseaseBars').innerHTML = barsHtml;
+
+    // Recommendations
+    const recsEl = document.getElementById('recommendations');
+    if (r.detected.length === 0) {
+      recsEl.innerHTML = `
+        <div class="healthy-card">
+          <h3>✓ You are Healthy!</h3>
+          <p style="color:var(--muted)">No diseases detected. Keep maintaining healthy habits.</p>
+          <div class="healthy-tips">
+            <span class="healthy-tip">Eat ragi, dal, veg</span>
+            <span class="healthy-tip">Walk 30 mins daily</span>
+            <span class="healthy-tip">Sleep 7-8 hours</span>
+            <span class="healthy-tip">Drink 8 glasses water</span>
+          </div>
+        </div>`;
+    } else {
+      recsEl.innerHTML = `<div class="section-title" style="margin:24px 0 16px;">Health Guide</div>` +
+        r.detected.map(disease => {
+          const rec = RECOMMENDATIONS[disease] || {};
+          return `
+            <div class="rec-card">
+              <div class="rec-disease-title">
+                ${disease}
+                <span class="rec-badge">Detected</span>
+              </div>
+              <div class="rec-grid">
+                <div class="rec-section">
+                  <h4>Eat More</h4>
+                  ${(rec.eat||[]).map(i=>`<div class="rec-item"><div class="dot dot-green"></div>${i}</div>`).join('')}
+                </div>
+                <div class="rec-section">
+                  <h4>Avoid</h4>
+                  ${(rec.avoid||[]).map(i=>`<div class="rec-item"><div class="dot dot-red"></div>${i}</div>`).join('')}
+                  <h4 style="margin-top:12px;">Exercise</h4>
+                  ${(rec.exercise||[]).map(i=>`<div class="rec-item"><div class="dot dot-yellow"></div>${i}</div>`).join('')}
+                </div>
+                <div class="rec-section">
+                  <h4>Government Help (Free!)</h4>
+                  <div class="rec-item" style="color:var(--green)">
+                    <div class="dot dot-green"></div>${rec.govt||'Visit PHC — FREE treatment available'}
+                  </div>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('formSection').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

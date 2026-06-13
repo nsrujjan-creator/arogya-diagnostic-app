@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AROGYA — Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    :root { --green:#00C896; --yellow:#FFB347; --red:#FF4757; --dark:#0A0E1A; --card:#111827; --border:#1F2937; --text:#E5E7EB; --muted:#6B7280; --white:#FFFFFF; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--dark); color:var(--text); font-family:'DM Sans',sans-serif; }
+    header { background:#0D1B2A; border-bottom:1px solid var(--border); padding:20px 40px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+    .logo { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; color:var(--green); }
+    .logo span { color:var(--white); font-weight:400; font-size:12px; display:block; letter-spacing:2px; text-transform:uppercase; }
+    .nav-links { display:flex; gap:16px; }
+    .nav-link { color:var(--muted); text-decoration:none; font-size:14px; padding:8px 16px; border-radius:8px; transition:all 0.2s; border:1px solid transparent; }
+    .nav-link:hover { color:var(--green); border-color:var(--border); }
+    .nav-link.active { color:var(--green); border-color:var(--green); background:rgba(0,200,150,0.05); }
+    .container { max-width:1100px; margin:0 auto; padding:40px 20px; }
+    .page-title { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; color:var(--white); margin-bottom:8px; }
+    .page-subtitle { color:var(--muted); margin-bottom:40px; }
+    .section-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--green); text-transform:uppercase; letter-spacing:2px; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:24px; }
+    .card-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--white); margin-bottom:6px; }
+    .card-subtitle { color:var(--muted); font-size:13px; margin-bottom:20px; }
+    .chart-container { position:relative; height:280px; }
+    .chart-sm { height:220px; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    @media(max-width:700px) { .grid-2 { grid-template-columns:1fr; } }
+    .epidemic-form { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+    @media(max-width:600px) { .epidemic-form { grid-template-columns:1fr 1fr; } }
+    .epi-field { display:flex; flex-direction:column; gap:6px; }
+    .epi-field label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; }
+    .epi-field input { background:var(--dark); border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:8px; font-size:14px; outline:none; font-family:'DM Sans',sans-serif; transition:border-color 0.2s; }
+    .epi-field input:focus { border-color:var(--green); }
+    .btn-check { background:var(--green); color:#000; border:none; padding:12px 28px; border-radius:10px; font-family:'Syne',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; }
+    .btn-check:hover { background:#00E6AC; }
+    .epidemic-result { display:none; border-radius:12px; padding:20px; margin-top:16px; }
+    .epidemic-result.normal   { background:rgba(0,200,150,0.05);  border:1px solid rgba(0,200,150,0.2); }
+    .epidemic-result.outbreak { background:rgba(255,71,87,0.05);  border:1px solid rgba(255,71,87,0.3); }
+    .epidemic-status { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; margin-bottom:8px; }
+    .normal .epidemic-status   { color:var(--green); }
+    .outbreak .epidemic-status { color:var(--red); }
+    .alert-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+    .alert-item { background:rgba(255,71,87,0.1); border:1px solid rgba(255,71,87,0.2); border-radius:8px; padding:10px 14px; font-size:13px; }
+    .alert-item strong { color:var(--red); }
+    .disease-selector { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+    .disease-btn { background:var(--dark); border:1px solid var(--border); color:var(--muted); padding:6px 14px; border-radius:20px; cursor:pointer; font-size:13px; transition:all 0.2s; font-family:'DM Sans',sans-serif; }
+    .disease-btn:hover { border-color:var(--green); color:var(--green); }
+    .disease-btn.active { background:rgba(0,200,150,0.1); border-color:var(--green); color:var(--green); }
+    .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+    @media(max-width:600px) { .stat-grid { grid-template-columns:1fr 1fr; } }
+    .stat-card { background:var(--dark); border:1px solid var(--border); border-radius:12px; padding:16px; text-align:center; }
+    .stat-value { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; color:var(--red); }
+    .stat-india { font-size:12px; color:var(--muted); margin-top:4px; }
+    .stat-label { font-size:12px; color:var(--text); margin-top:6px; }
+    .live-bar { margin-bottom:10px; }
+    .live-bar-label { display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; }
+    .live-bar-track { height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+    .live-bar-fill  { height:100%; background:var(--green); border-radius:4px; transition:width 1s ease; }
+    .loading { text-align:center; padding:40px; color:var(--muted); }
+    .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">AROGYA <span>Analytics</span></div>
+  <div class="nav-links">
+    <a href="/" class="nav-link">New Diagnosis</a>
+    <a href="/history" class="nav-link">History</a>
+    <a href="/analytics" class="nav-link active">Analytics</a>
+  </div>
+</header>
+<div class="container">
+  <h1 class="page-title">AROGYA Analytics</h1>
+  <p class="page-subtitle">Epidemic detection, AI explainability, and Karnataka health insights</p>
+
+  <!-- 1. EPIDEMIC DETECTION -->
+  <div class="section-title">Epidemic Detection — Isolation Forest AI</div>
+  <div class="card">
+    <div class="card-title">Village Disease Monitor</div>
+    <div class="card-subtitle">Enter number of cases per disease in your village this week. AROGYA will detect if an outbreak is occurring.</div>
+    <div class="epidemic-form">
+      <div class="epi-field"><label>Diabetes</label>      <input type="number" id="epi_0" value="8"  min="0"></div>
+      <div class="epi-field"><label>Anemia</label>        <input type="number" id="epi_1" value="5"  min="0"></div>
+      <div class="epi-field"><label>Heart</label>         <input type="number" id="epi_2" value="2"  min="0"></div>
+      <div class="epi-field"><label>Hypertension</label>  <input type="number" id="epi_3" value="4"  min="0"></div>
+      <div class="epi-field"><label>Malnutrition</label>  <input type="number" id="epi_4" value="3"  min="0"></div>
+      <div class="epi-field"><label>TB</label>            <input type="number" id="epi_5" value="2"  min="0"></div>
+      <div class="epi-field"><label>Kidney</label>        <input type="number" id="epi_6" value="1"  min="0"></div>
+      <div class="epi-field"><label>Pregnancy Risk</label><input type="number" id="epi_7" value="2"  min="0"></div>
+      <div class="epi-field"><label>Dengue</label>        <input type="number" id="epi_8" value="1"  min="0"></div>
+    </div>
+    <button class="btn-check" onclick="checkEpidemic()">Check for Outbreak</button>
+    <div class="epidemic-result" id="epidemicResult">
+      <div class="epidemic-status" id="epidemicStatus">--</div>
+      <div id="epidemicMessage"></div>
+      <div class="alert-list" id="alertList"></div>
+    </div>
+  </div>
+
+  <!-- 2. SHAP FEATURE IMPORTANCE -->
+  <div class="section-title">AI Explainability — Why Did AROGYA Decide?</div>
+  <div class="card">
+    <div class="card-title">Feature Importance per Disease</div>
+    <div class="card-subtitle">Shows which medical measurements matter most for each AI model. Proves AROGYA learned real medical patterns.</div>
+    <div class="disease-selector" id="diseaseSelector"></div>
+    <div class="chart-container chart-sm"><canvas id="shapChart"></canvas></div>
+    <p style="font-size:12px;color:var(--muted);margin-top:12px;">Based on permutation feature importance — how much accuracy drops when each feature is removed.</p>
+  </div>
+
+  <!-- 3. KARNATAKA STATISTICS -->
+  <div class="section-title">Karnataka vs India — Why AROGYA Is Needed</div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-value">31.5%</div><div class="stat-india">India: 30.1%</div><div class="stat-label">Heart Risk</div></div>
+    <div class="stat-card"><div class="stat-value">51.0%</div><div class="stat-india">India: 49.5%</div><div class="stat-label">Diabetes</div></div>
+    <div class="stat-card"><div class="stat-value">64.0%</div><div class="stat-india">India: 57.0%</div><div class="stat-label">Anemia (Women)</div></div>
+    <div class="stat-card"><div class="stat-value">145</div> <div class="stat-india">India: 134</div>  <div class="stat-label">TB per lakh</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Karnataka vs India Comparison</div>
+      <div class="chart-container chart-sm"><canvas id="karnChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Live AROGYA Detection Rates</div>
+      <div class="card-subtitle" id="liveTotal">From patient records</div>
+      <div id="liveBars"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let shapChartInstance = null;
+  let shapData = {};
+
+  window.onload = async () => {
+    await loadShapData();
+    drawKarnatakaChart();
+    await loadLiveStats();
+  };
+
+  async function checkEpidemic() {
+    const counts = [];
+    for (let i = 0; i < 9; i++) counts.push(parseInt(document.getElementById('epi_'+i).value)||0);
+    try {
+      const res  = await fetch('/epidemic_check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({counts})});
+      const data = await res.json();
+      const el   = document.getElementById('epidemicResult');
+      el.style.display = 'block';
+      if (data.is_outbreak) {
+        el.className = 'epidemic-result outbreak';
+        document.getElementById('epidemicStatus').textContent  = '⚠ OUTBREAK DETECTED!';
+        document.getElementById('epidemicMessage').textContent = 'Unusual disease cluster detected. Alert PHC and District Health Officer immediately.';
+        document.getElementById('alertList').innerHTML = data.alerts.map(a=>`<div class="alert-item"><strong>${a.disease}</strong> — ${a.count} cases this week (Normal: ~${a.normal.toFixed(1)}, Threshold: ${a.threshold.toFixed(1)})</div>`).join('');
+      } else {
+        el.className = 'epidemic-result normal';
+        document.getElementById('epidemicStatus').textContent  = '✓ No Outbreak — Normal';
+        document.getElementById('epidemicMessage').textContent = 'Disease levels are within normal range. Continue routine monitoring.';
+        document.getElementById('alertList').innerHTML = '';
+      }
+    } catch(e) { alert('Error. Make sure Flask is running.'); }
+  }
+
+  async function loadShapData() {
+    try {
+      const res  = await fetch('/shap_data');
+      const data = await res.json();
+      shapData   = data.shap;
+      const sel  = document.getElementById('diseaseSelector');
+      Object.keys(shapData).forEach((disease, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'disease-btn' + (i===0?' active':'');
+        btn.textContent = disease;
+        btn.onclick = () => {
+          document.querySelectorAll('.disease-btn').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          drawShapChart(disease);
+        };
+        sel.appendChild(btn);
+      });
+      drawShapChart(Object.keys(shapData)[0]);
+    } catch(e) { console.error(e); }
+  }
+
+  function drawShapChart(disease) {
+    const d      = shapData[disease];
+    const sorted = d.features.map((f,i)=>({f,v:d.importance[i]})).sort((a,b)=>a.v-b.v);
+    const colors = sorted.map(x=>x.v>=0.4?'rgba(255,71,87,0.8)':x.v>=0.2?'rgba(255,179,71,0.8)':'rgba(0,200,150,0.8)');
+    if (shapChartInstance) shapChartInstance.destroy();
+    const ctx = document.getElementById('shapChart').getContext('2d');
+    shapChartInstance = new Chart(ctx,{
+      type:'bar',
+      data:{labels:sorted.map(x=>x.f),datasets:[{data:sorted.map(x=>x.v),backgroundColor:colors,borderRadius:6}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`Importance: ${(c.raw*100).toFixed(0)}%`}}},scales:{x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#6B7280',callback:v=>`${(v*100).toFixed(0)}%`},title:{display:true,text:'Feature Importance',color:'#6B7280'}},y:{grid:{display:false},ticks:{color:'#E5E7EB'}}}}
+    });
+  }
+
+  function drawKarnatakaChart() {
+    const ctx = document.getElementById('karnChart').getContext('2d');
+    new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:['Heart Risk(%)','Diabetes(%)','Anemia(%)','TB/lakh'],
+        datasets:[
+          {label:'Karnataka',data:[31.5,51.0,64.0,145],backgroundColor:'rgba(255,71,87,0.7)',borderRadius:4},
+          {label:'India Avg', data:[30.1,49.5,57.0,134],backgroundColor:'rgba(0,200,150,0.7)',borderRadius:4}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6B7280',font:{size:11}}}},scales:{x:{grid:{display:false},ticks:{color:'#6B7280',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#6B7280'}}}}
+    });
+  }
+
+  async function loadLiveStats() {
+    try {
+      const res  = await fetch('/karnataka_stats');
+      const data = await res.json();
+      const live = data.live_stats;
+      const total= data.total_patients;
+      document.getElementById('liveTotal').textContent = `From ${total} patient${total!==1?'s':''} screened by AROGYA`;
+      if (total===0) {
+        document.getElementById('liveBars').innerHTML = '<p style="color:var(--muted);font-size:13px;">No patients diagnosed yet. Run some diagnoses first!</p>';
+        return;
+      }
+      document.getElementById('liveBars').innerHTML = Object.entries(live).map(([d,pct])=>{
+        const color = pct>40?'var(--red)':pct>20?'var(--yellow)':'var(--green)';
+        return `<div class="live-bar"><div class="live-bar-label"><span>${d}</span><span style="color:${color};font-weight:600">${pct}%</span></div><div class="live-bar-track"><div class="live-bar-fill" style="width:${pct}%;background:${color}"></div></div></div>`;
+      }).join('');
+    } catch(e) { document.getElementById('liveBars').innerHTML='<p style="color:var(--muted)">Could not load.</p>'; }
+  }
+</script>
+</body>
+</html>
