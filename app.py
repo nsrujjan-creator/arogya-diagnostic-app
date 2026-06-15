@@ -270,24 +270,40 @@ def load_all_models():
     except Exception as e:
         print(f"TB FAILED: {e}")
 
-    # 6. KIDNEY — synthetic
+    # 6. KIDNEY — synthetic (FIXED)
     try:
         np.random.seed(42)
-        n = 200
-        kd_pos = np.random.randn(n, 24) * 2 + 3
-        kd_neg = np.random.randn(n, 24)
-        X_kd = np.vstack([kd_pos, kd_neg])
-        y_kd = np.hstack([np.ones(n), np.zeros(n)])
+        n = 500
+        # Realistic human scales for Age, SysBP, Hemoglobin, Glucose
+        kd_pos = pd.DataFrame({
+            'Age': np.random.normal(60, 12, n).clip(30, 85),
+            'SysBP': np.random.normal(160, 20, n).clip(130, 200),
+            'Hemoglobin': np.random.normal(10.0, 1.5, n).clip(6, 12),
+            'Glucose': np.random.normal(180, 40, n).clip(120, 300),
+            'Result': 1
+        })
+        kd_neg = pd.DataFrame({
+            'Age': np.random.normal(35, 12, n).clip(18, 65),
+            'SysBP': np.random.normal(115, 10, n).clip(90, 130),
+            'Hemoglobin': np.random.normal(14.0, 1.5, n).clip(12, 17),
+            'Glucose': np.random.normal(90, 15, n).clip(70, 110),
+            'Result': 0
+        })
+        df_kd = pd.concat([kd_pos, kd_neg]).sample(frac=1, random_state=42)
+        
+        X_kd = df_kd[['Age', 'SysBP', 'Hemoglobin', 'Glucose']].values
+        y_kd = df_kd['Result'].values
+        
         X_tr,X_te,y_tr,y_te = train_test_split(X_kd,y_kd,test_size=0.2,random_state=42)
         scaler_kd = StandardScaler()
-        model_kd  = MLPClassifier(hidden_layer_sizes=(32,16),activation='relu',
+        model_kd  = MLPClassifier(hidden_layer_sizes=(16,8),activation='relu',
                                   solver='adam',max_iter=1000,random_state=42,early_stopping=True)
         model_kd.fit(scaler_kd.fit_transform(X_tr), y_tr)
         acc = accuracy_score(y_te, model_kd.predict(scaler_kd.transform(X_te)))
         print(f"Kidney: {acc*100:.1f}% ✅")
     except Exception as e:
         print(f"Kidney FAILED: {e}")
-
+      
     # 7. PREGNANCY — synthetic
     try:
         np.random.seed(42)
@@ -552,14 +568,14 @@ def diagnose(data):
     elif tb_sym >= 2: results['TB'] = round(max(tb_ml, 45), 1)
     else:             results['TB'] = round(tb_ml, 1)
 
-    # 7. KIDNEY
+   # 7. KIDNEY (FIXED)
     try:
-        kd_in = np.zeros((1, 24))
-        kd_in[0,0] = age; kd_in[0,1] = systolic_bp - 60
-        kd_in[0,6] = hemo_est; kd_in[0,7] = glucose_est; kd_in[0,14] = hemo_est
+        # Inputs perfectly match the 4 training columns: [Age, SysBP, Hemoglobin, Glucose]
+        kd_in = np.array([[age, systolic_bp, hemo_est, glucose_est]])
         kd_p = model_kd.predict_proba(scaler_kd.transform(kd_in))[0]
         results['Kidney'] = round(kd_p[1] * 100, 1)
-    except: results['Kidney'] = 0
+    except: 
+        results['Kidney'] = 0
 
     # 8. PREGNANCY
     if gender == 0 and 15 <= age <= 50:
