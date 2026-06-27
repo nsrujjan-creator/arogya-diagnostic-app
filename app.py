@@ -350,6 +350,7 @@ def diagnose(data):
     weight      = float(data['weight'])
     height      = float(data['height'])
     systolic_bp = int(data['systolic_bp'])
+    diastolic_bp = int(data.get('diastolic_bp', systolic_bp - 40))  # fallback only if not provided
 
     # Symptoms
     headache     = bool(data.get('headache', False))
@@ -409,8 +410,7 @@ def diagnose(data):
 
     # 4. HYPERTENSION
     try:
-        diastolic_est = systolic_bp - 40  # standard clinical approximation when only systolic is measured
-        ht_in = np.array([[age, bmi, systolic_bp, diastolic_est, smoking, pulse]])
+        ht_in = np.array([[age, bmi, systolic_bp, diastolic_bp, smoking, pulse]])
         ht_p  = model_ht.predict_proba(scaler_ht.transform(ht_in))[0]
         results['Hypertension'] = round(ht_p[1] * 100, 1)
     except: results['Hypertension'] = 0
@@ -757,7 +757,11 @@ def shap_importance():
 
 # ── KARNATAKA STATS ──────────────────────────────────────────
 # ── RUN ──────────────────────────────────────────────────────
+# Load models at import time so this works under BOTH:
+#  - `python app.py` (local dev, __name__ == '__main__')
+#  - `gunicorn app:app` (Render/production, app.py is imported, not run directly)
 load_all_models()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
